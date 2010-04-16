@@ -1,8 +1,6 @@
 package org.malstream;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
@@ -10,7 +8,7 @@ import java.util.List;
 import java.util.Vector;
 
 public class GfwProxyServer {
-	private static final int[] ports = { 4444, 5555 };
+	private static final int[] ports = { 4444, 5555, 5665 };
 
 	private Vector<ServerSocket> serverSocket;
 	private List<Socket> sockets;
@@ -39,6 +37,9 @@ public class GfwProxyServer {
 	private synchronized void addSocket(Socket socket) {
 
 		sockets.add(socket);
+		ClientConnection cl = new ClientConnection(socket);
+		Thread t = new Thread(cl);
+		t.start();
 	}
 
 	public synchronized boolean hasNewConnection() {
@@ -75,11 +76,6 @@ public class GfwProxyServer {
 								+ s.getLocalPort() + "...");
 						s.setKeepAlive(true);
 						addSocket(s);
-						while (running) {
-							InputStream input = s.getInputStream();
-							OutputStream output = s.getOutputStream();
-							output.write(input.read());
-						}
 					}
 				} catch (IOException e) {
 					// e.printStackTrace();
